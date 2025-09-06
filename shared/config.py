@@ -1,0 +1,56 @@
+"""
+Shared configuration settings
+"""
+
+import os
+
+
+class Settings:
+    """Application settings"""
+
+    # API Configuration
+    API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
+    API_PORT: int = int(os.getenv("API_PORT", "8000"))
+    API_RELOAD: bool = os.getenv("API_RELOAD", "true").lower() == "true"
+
+    # Frontend Configuration
+    FRONTEND_HOST: str = os.getenv("FRONTEND_HOST", "0.0.0.0")
+    FRONTEND_PORT: int = int(os.getenv("FRONTEND_PORT", "8501"))
+
+    # Backend URL for frontend
+    BACKEND_URL: str = os.getenv("BACKEND_URL", f"http://localhost:{API_PORT}")
+
+    # Logging Configuration
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+
+    # CORS Configuration
+    CORS_ORIGINS: list = [
+        f"http://localhost:{FRONTEND_PORT}",
+        f"http://127.0.0.1:{FRONTEND_PORT}",
+        "http://localhost:3000",  # For future React frontend
+    ]
+
+
+class StreamlitSettings:
+    """Streamlit settings"""
+
+    PAGE_TITLE: str = "Image Processing Application"
+    PAGE_ICON: str = "🚀"
+    LAYOUT: str = "wide"
+    INITIAL_SIDEBAR_STATE: str = "expanded"
+
+    @classmethod
+    def as_dict(cls) -> dict:
+        """Return settings as a dictionary"""
+
+        return {
+            "page_title": cls.PAGE_TITLE,
+            "page_icon": cls.PAGE_ICON,
+            "layout": cls.LAYOUT,
+            "initial_sidebar_state": cls.INITIAL_SIDEBAR_STATE,
+        }
+
+
+# Global settings instance
+settings = Settings()
+streamlit_settings = StreamlitSettings()
