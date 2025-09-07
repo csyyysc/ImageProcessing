@@ -11,30 +11,35 @@ A full-stack image processing application with FastAPI backend and Streamlit fro
 ImageProcessingApp/
 ├── backend/                    # FastAPI backend
 │   ├── api/                   # API endpoints
-│   │   ├── user.py           # User authentication endpoints
-│   │   └── image.py          # Image processing endpoints
 │   ├── models/               # Pydantic models
-│   │   ├── user_models.py    # User-related models
-│   │   └── image_models.py   # Image-related models
 │   ├── services/             # Business logic
-│   │   ├── auth_service.py   # Authentication service
-│   │   ├── user_service.py   # User management service
-│   │   └── image_service.py  # Image processing service
+│   ├── middleware/           # FastAPI middleware
 │   ├── utils/                # Utility functions
-│   │   └── image.py          # Image processing utilities
+│   ├── exceptions/           # Custom exceptions
+│   ├── tests/                # Backend tests
 │   ├── database.py           # Database operations
 │   └── main.py               # FastAPI application
 ├── frontend/                 # Streamlit frontend
 │   ├── api/                  # API client modules
-│   │   ├── common.py         # Base API client
-│   │   └── image.py          # Image API client
-│   ├── auth.py               # Authentication module
+│   ├── components/           # UI components
+│   ├── utils/                # Frontend utilities
+│   ├── tests/                # Frontend tests
+│   ├── auth.py               # Legacy authentication module
 │   └── app.py                # Main Streamlit application
 ├── shared/                   # Shared components
-│   └── config.py             # Configuration settings
+│   ├── config.py             # Configuration settings
+│   └── models/               # Shared models
+├── scripts/                  # Utility scripts
+├── data/                     # Database storage
 ├── uploads/                  # Image storage directory
+├── docker-compose.yml        # Docker Compose configuration
+├── docker-compose.dev.yml    # Development Docker Compose
+├── Dockerfile                # Docker configuration
+├── Makefile                  # Build automation
+├── nginx.conf                # Nginx configuration
 ├── main.py                   # Application entry point
 ├── pyproject.toml            # Project dependencies
+├── uv.lock                   # Dependency lock file
 └── README.md                 # This file
 ```
 
@@ -103,9 +108,8 @@ Once the backend is running, you can access:
 
 ### 🔐 User Authentication
 - **User Registration**: Create new user accounts
-- **Secure Login**: Password-based authentication with rate limiting
-- **Session Management**: Token-based session handling
-- **Account Protection**: Failed login attempt tracking and temporary lockouts
+- **Secure Login**: Password-based authentication
+- **Session Management**: Basic session handling
 
 ### 📸 Image Management
 - **Image Upload**: Support for PNG, JPG, JPEG formats (up to 10MB)
@@ -285,25 +289,10 @@ CMD ["uv", "run", "python", "main.py", "dev"]
 
 ### Security Considerations
 
-- **Authentication**: Currently uses basic token system (consider upgrading to JWT)
-- **File Upload**: Implement file type validation and size limits
-- **Rate Limiting**: Configure appropriate limits for production
+- **Authentication**: Basic token system for user sessions
+- **File Upload**: File type validation and size limits implemented
 - **HTTPS**: Use SSL/TLS in production
-- **Database**: Use production database (PostgreSQL, MySQL)
 - **Secrets**: Store sensitive data in environment variables
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Test thoroughly
-5. Update documentation if needed
-6. Submit a pull request
-
-## 📄 License
-
-This project is open source and available under the MIT License.
 
 ## 🆘 Troubleshooting
 
@@ -343,15 +332,24 @@ This project is open source and available under the MIT License.
 
 ## 🔮 Future Enhancements
 
-- **JWT Authentication**: Implement proper JWT tokens with refresh mechanism
 - **Advanced Filters**: More image filters and effects
 - **Batch Processing**: Process multiple images simultaneously
 - **Cloud Storage**: Integration with AWS S3, Google Cloud Storage
-- **User Roles**: Admin and user permission levels
-- **Image Analytics**: Usage statistics and insights
-- **API Rate Limiting**: Advanced rate limiting and quotas
 - **Image Search**: Search and filter images by metadata
+- **tests**: frontend/backend unit tests
 
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes
+4. Test thoroughly
+5. Update documentation if needed
+6. Submit a pull request
+
+## 📄 License
+
+This project is open source and available under the MIT License.
 ---
 
 Happy Image Processing! 📸✨
