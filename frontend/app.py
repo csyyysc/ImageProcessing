@@ -11,6 +11,12 @@ from shared.config import settings, streamlit_settings
 from frontend.api.common import BaseAPI
 from frontend.api.image import ImageAPI
 from frontend.auth import require_auth, show_user_info
+from frontend.utils.download import (
+    handle_download_error, show_download_error,
+    trigger_direct_download, check_and_show_download_success
+)
+from frontend.components.ui import apply_all_css, create_sidebar_section
+from frontend.components.buttons import create_download_button, create_bulk_download_button
 
 
 logger = logging.getLogger(__name__)
@@ -47,37 +53,11 @@ def main():
     if not require_auth():
         return
 
-    # Add custom CSS for consistent image display
-    st.markdown("""
-    <style>
-    .image-container {
-        width: 300px;
-        height: 300px;
-        border: 2px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 5px;
-        margin: 5px 0;
-        background-color: #f8f9fa;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-    .image-container img {
-        width: 100%;
-        height: 100%;
-        border-radius: 5px;
-        object-fit: cover;
-    }
-    .image-actions {
-        margin-top: 10px;
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # Check for download success messages and show popups
+    check_and_show_download_success()
+
+    # Apply all CSS styles for consistent UI
+    apply_all_css()
 
     st.title("Image Processing Application")
     st.markdown("---")
@@ -89,8 +69,7 @@ def main():
     with st.sidebar:
         show_user_info()
 
-        st.markdown("---")
-        st.header("📊 Image Statistics")
+        create_sidebar_section("Image Statistics", "📊")
 
         # Check backend health first
         backend_healthy = api.health_check()
@@ -100,35 +79,79 @@ def main():
                 user_id = st.session_state["user"]["id"]
                 image_api = ImageAPI(settings.BACKEND_URL)
 
-                # Get images for statistics
-                images = image_api.get_images(
-                    user_id=user_id, page=1, limit=100)
-                if images:
-                    total_size = sum(img.get('file_size', 0) for img in images)
-                    avg_size = total_size / len(images) if images else 0
+                total_count = image_api.get_total_images(user_id)
 
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Total Images", len(images))
-                    with col2:
-                        st.metric("Total Size",
-                                  f"{total_size / (1024*1024):.1f} MB")
+                if total_count:
+                    images = image_api.get_images(
+                        user_id=user_id, page=1, limit=100)
 
-                    col3, col4 = st.columns(2)
-                    with col3:
-                        st.metric("Average Size", f"{avg_size / 1024:.1f} KB")
-                    with col4:
-                        st.metric("Storage Used",
-                                  f"{total_size / (1024*1024):.1f} MB")
+                    if images:
+                        total_size = sum(img.get('file_size', 0)
+                                         for img in images)
+                        avg_size = total_size / len(images) if images else 0
+
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Total Images", total_count)
+                        with col2:
+                            st.metric("Total Size",
+                                      f"{total_size / (1024*1024):.1f} MB")
+
+                        col3, col4 = st.columns(2)
+                        with col3:
+                            st.metric("Average Size",
+                                      f"{avg_size / 1024:.1f} KB")
+                        with col4:
+                            st.metric("Storage Used",
+                                      f"{total_size / (1024*1024):.1f} MB")
                 else:
                     st.info("No images found")
             except Exception as e:
-                st.error("Unable to load statistics")
+                st.error(f"Unable to load statistics: {str(e)}")
         else:
             st.warning("Backend not accessible")
 
-        st.markdown("---")
-        st.header("🔧 System Status")
+        create_sidebar_section("Download Statistics", "📥")
+
+        if backend_healthy:
+            try:
+                user_id = st.session_state["user"]["id"]
+                image_api = ImageAPI(settings.BACKEND_URL)
+
+                # Get download stats
+                download_stats = image_api.get_download_stats(user_id)
+                if download_stats:
+                    rate_limits = download_stats.get('rate_limits', {})
+
+                    # API Rate Limits
+                    api_calls = rate_limits.get('api_calls', {})
+                    st.metric(
+                        "API Calls Remaining", f"{api_calls.get('remaining', 0)}/{api_calls.get('limit', 60)}")
+
+                    # Download Limits
+                    downloads = rate_limits.get('downloads', {})
+                    st.metric(
+                        "Downloads Remaining", f"{downloads.get('remaining', 0)}/{downloads.get('limit', 500)}")
+
+                    # Reset time info
+                    reset_time = downloads.get('reset_time', '')
+                    if reset_time:
+                        try:
+                            from datetime import datetime
+                            reset_dt = datetime.fromisoformat(
+                                reset_time.replace('Z', '+00:00'))
+                            st.caption(
+                                f"Resets: {reset_dt.strftime('%H:%M UTC')}")
+                        except:
+                            pass
+                else:
+                    st.info("Unable to load download statistics")
+            except Exception as e:
+                st.error(f"Error loading download stats: {str(e)}")
+        else:
+            st.warning("Backend not accessible")
+
+        create_sidebar_section("System Status", "🔧")
 
         if backend_healthy:
             st.success("✅ Backend is running")
@@ -140,8 +163,6 @@ def main():
         # Transformation popup window
         if st.session_state.get('show_transform_any', False):
             transform_image_id = st.session_state.get('transform_image_id')
-            transform_filename = st.session_state.get(
-                'transform_filename', 'Unknown')
 
             # Get API client and user info
             image_api = ImageAPI(settings.BACKEND_URL)
@@ -221,24 +242,11 @@ def main():
                 quality = st.slider("Quality (%)", 1, 100,
                                     85, key="popup_quality")
 
-            # Action buttons
             st.markdown("---")
             col1, col2 = st.columns(2)
 
             with col1:
                 if st.button("🚀 Apply", key="popup_apply", type="primary"):
-                    # Collect transformation parameters
-                    transformations = {
-                        'resize': resize,
-                        'crop': crop,
-                        'rotate': rotate,
-                        'flip': flip,
-                        'mirror': mirror,
-                        'watermark': watermark,
-                        'compress': compress,
-                        'change_format': change_format,
-                        'apply_filters': apply_filters
-                    }
 
                     params = {}
                     if resize:
@@ -263,9 +271,7 @@ def main():
                     if compress:
                         params['compress'] = {'quality': quality}
 
-                    # Apply transformations
                     with st.spinner("Applying transformations..."):
-                        # Call the transform API
                         result = image_api.transform_image(
                             transform_image_id, user_id, params)
 
@@ -294,13 +300,11 @@ def main():
                     st.session_state['show_transform_any'] = False
                     st.rerun()
 
-    # Main content
     if not backend_healthy:
         st.error("🚨 Cannot connect to backend server")
         st.info("Please ensure the server is accessible.")
         return
 
-    # Tabs for different functionalities
     tab1, tab2, tab3 = st.tabs(
         ["📋 View Images", "➕ Upload Image", "✏️ Manage Images"])
 
@@ -334,14 +338,12 @@ def main():
         with col1:
             st.header("📋 All Images")
         with col2:
-            # View mode toggle
             view_mode = st.selectbox(
                 "View Mode",
                 ["Grid", "Large View"],
                 key="view_mode_selector"
             )
         with col3:
-            # Images per page selector
             new_limit = st.selectbox(
                 "Images per page",
                 [5, 10, 20, 50],
@@ -432,20 +434,31 @@ def main():
 
                             full_url = f"{settings.BACKEND_URL}{image_url}"
 
-                            # Create a styled container for consistent image display
                             st.markdown(f"""
                             <div class="image-container">
                                 <img src="{full_url}" alt="{filename}">
                             </div>
                             """, unsafe_allow_html=True)
 
-                            # Action buttons in a consistent layout
-                            col1, col2 = st.columns(2)
+                            col1, col2, col3 = st.columns([4, 4, 3])
                             with col1:
-                                if st.button("🗑️ Delete", key=f"delete_{image_id}", type="secondary"):
-                                    # Show confirmation dialog
-                                    st.session_state[f"show_delete_confirm_{image_id}"] = True
-                                    st.rerun()
+                                if create_download_button(key=f"download_{image_id}"):
+                                    try:
+                                        image_data = image_api.download_single_image(
+                                            image_id, user_id)
+                                        if image_data:
+                                            trigger_direct_download(
+                                                image_data,
+                                                filename,
+                                                image.get(
+                                                    'mime_type', 'image/jpeg')
+                                            )
+                                        else:
+                                            show_download_error(
+                                                "Failed to download image")
+                                    except Exception as e:
+                                        show_download_error(
+                                            handle_download_error(e))
 
                             with col2:
                                 if st.button("🎨 Transform", key=f"transform_{image_id}", type="primary"):
@@ -453,6 +466,12 @@ def main():
                                     st.session_state['show_transform_any'] = True
                                     st.session_state['transform_image_id'] = image_id
                                     st.session_state['transform_filename'] = filename
+                                    st.rerun()
+
+                            with col3:
+                                if st.button("🗑️ Delete", key=f"delete_{image_id}", type="secondary"):
+                                    # Show confirmation dialog
+                                    st.session_state[f"show_delete_confirm_{image_id}"] = True
                                     st.rerun()
 
                             # Confirmation dialog
@@ -683,7 +702,7 @@ def main():
             """, unsafe_allow_html=True)
 
             # Show upload button for better UX
-            if st.button("📤 Upload Image", type="primary", key="upload_btn"):
+            if st.button("📤 Upload", type="primary", key="upload_btn"):
                 # Auto-upload on button click
                 with st.spinner("🔄 Uploading image..."):
                     try:
@@ -780,7 +799,7 @@ def main():
             try:
                 with st.spinner("🔄 Loading images for management..."):
                     images = image_api.get_images(
-                        user_id=user_id, page=1, limit=50)
+                        user_id=user_id, page=1, limit=st.session_state.get('images_per_page', 10))
                     if images is None:
                         images = []
                     st.session_state[cache_key] = images
@@ -809,8 +828,32 @@ def main():
                     key="manage_view_mode_selector"
                 )
 
-            # Second row: Delete All button in the most right position
+            # Second row: Delete All and Bulk Download buttons
             col1, col2, col3 = st.columns([2, 1, 1])
+            with col2:
+                # Bulk Download button
+                if create_bulk_download_button():
+                    try:
+                        # Get all image IDs
+                        image_ids = [img['id'] for img in images]
+                        if image_ids:
+                            # Download as ZIP
+                            zip_data = image_api.download_bulk_images(
+                                image_ids, user_id, "zip")
+                            if zip_data:
+                                trigger_direct_download(
+                                    zip_data,
+                                    f"images_{user_id}.zip",
+                                    "application/zip"
+                                )
+                            else:
+                                show_download_error(
+                                    "Failed to create ZIP file")
+                        else:
+                            st.warning("⚠️ No images to download")
+                    except Exception as e:
+                        show_download_error(handle_download_error(e))
+
             with col3:
                 # Delete All button under View Mode but in the most right of its own row
                 if st.button("🗑️ Delete All", key="delete_all", type="secondary"):
@@ -862,12 +905,33 @@ def main():
 
                         with col2:
                             # Action buttons
-                            if st.button("🗑️ Delete", key=f"manage_delete_{image['id']}", type="secondary"):
-                                # Show confirmation dialog
-                                st.session_state[f"show_manage_delete_confirm_{image['id']}"] = True
-                                st.rerun()
+                            col_btn1, col_btn2 = st.columns(2)
+                            with col_btn1:
+                                if st.button("🗑️ Delete", key=f"manage_delete_{image['id']}", type="secondary"):
+                                    # Show confirmation dialog
+                                    st.session_state[f"show_manage_delete_confirm_{image['id']}"] = True
+                                    st.rerun()
 
-                            # Confirmation dialog for manage tab
+                            with col_btn2:
+                                if create_download_button(key=f"manage_download_{image['id']}"):
+                                    try:
+                                        image_data = image_api.download_single_image(
+                                            image['id'], user_id)
+                                        if image_data:
+                                            trigger_direct_download(
+                                                image_data,
+                                                image.get(
+                                                    'original_name', 'image'),
+                                                image.get(
+                                                    'mime_type', 'image/jpeg')
+                                            )
+                                        else:
+                                            show_download_error(
+                                                "Failed to download image")
+                                    except Exception as e:
+                                        show_download_error(
+                                            handle_download_error(e))
+
                             if st.session_state.get(f"show_manage_delete_confirm_{image['id']}", False):
                                 st.warning(
                                     "⚠️ Are you sure you want to delete this image?")

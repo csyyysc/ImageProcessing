@@ -19,7 +19,7 @@ def main():
         description="Image Processing Application")
     parser.add_argument(
         "command",
-        choices=["backend", "frontend", "dev", "info"],
+        choices=["backend", "frontend", "dev", "production", "info"],
         help="Command to run"
     )
 
@@ -34,6 +34,12 @@ def main():
     elif args.command == "dev":
         print("🔥 Starting Development Environment...")
         subprocess.run([sys.executable, "scripts/dev.py"], env=env)
+    elif args.command == "test":
+        print("🔥 Starting Test Environment...")
+        subprocess.run([sys.executable, "scripts/test.py"], env=env)
+    elif args.command == "production":
+        print("🏭 Starting Production Environment...")
+        subprocess.run([sys.executable, "scripts/production.py"], env=env)
     elif args.command == "info":
         print_info()
     else:
@@ -52,6 +58,7 @@ def print_info():
     print("  backend   - Start FastAPI backend only")
     print("  frontend  - Start Streamlit frontend only")
     print("  dev       - Start both services")
+    print("  production - Start both services in production mode")
     print("  info      - Show this information")
     print()
     print("Quick Start:")

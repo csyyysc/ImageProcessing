@@ -1,6 +1,9 @@
 # Image Processing Application
 
-A full-stack image processing application with FastAPI backend and Streamlit frontend, featuring user authentication, image upload, transformation, and management capabilities.
+A full-stack image processing application with FastAPI backend and Streamlit frontend, featuring user authentication, image upload, transformation, and management capabilities. 
+
+> **Project Source**: This project is based on the [Image Processing Service](https://roadmap.sh/projects/image-processing-service) roadmap project from roadmap.sh
+
 
 ## 🏗️ Project Structure
 

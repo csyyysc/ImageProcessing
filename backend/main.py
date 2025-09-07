@@ -15,6 +15,7 @@ from backend.api.user import router as user_router
 from backend.api.image import router as image_router
 from backend.database import db_manager  # Initialize database on import
 from backend.utils.error_handler import validation_exception_handler
+from backend.middleware.rate_limit_middleware import add_rate_limit_middleware
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +56,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add rate limiting middleware
+add_rate_limit_middleware(app)
 
 # Mount static files for image serving
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

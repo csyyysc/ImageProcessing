@@ -2,8 +2,9 @@
 Image Processing Service Implementations
 """
 
+import os
 import logging
-from typing import List
+from typing import List, Optional, Dict
 from fastapi import UploadFile, HTTPException, status
 
 from backend.database import image_repo
@@ -101,7 +102,7 @@ class ImageService:
     def get_image_by_id(self, image_id: int, user_id: int) -> ImageResponse:
         """Get a specific image by ID (with user ownership check)"""
 
-        image_data = self.image_repo.get_image_by_id(image_id)
+        image_data = self.image_repo.get_image_by_id(image_id, user_id)
 
         if not image_data:
             raise HTTPException(
@@ -120,12 +121,12 @@ class ImageService:
     def delete_image(self, image_id: int, user_id: int) -> bool:
         """Delete an image specified to a user, and delete it from the filesystem"""
 
-        image_data = self.image_repo.get_image_by_id(image_id)
+        image_data = self.image_repo.get_image_by_id(image_id, user_id)
 
-        if not image_data or image_data['user_id'] != user_id:
+        if not image_data:
             raise HTTPException(
-                detail="Access denied",
-                status_code=status.HTTP_403_FORBIDDEN
+                detail="Image not found or access denied",
+                status_code=status.HTTP_404_NOT_FOUND
             )
 
         deleted = self.image_repo.delete_image(image_id, user_id)
@@ -142,18 +143,12 @@ class ImageService:
         """Transform an image and save the result"""
 
         try:
-            image_data = self.image_repo.get_image_by_id(image_id)
+            image_data = self.image_repo.get_image_by_id(image_id, user_id)
 
             if not image_data:
                 raise HTTPException(
-                    detail="Image not found",
+                    detail="Image not found or access denied",
                     status_code=status.HTTP_404_NOT_FOUND
-                )
-
-            if image_data['user_id'] != user_id:
-                raise HTTPException(
-                    detail="Access denied",
-                    status_code=status.HTTP_403_FORBIDDEN
                 )
 
             transform_dict = {}
@@ -220,6 +215,51 @@ class ImageService:
                 original_image=None,
                 transformed_image=None
             )
+
+    def get_image_data_for_download(self, image_id: int, user_id: int) -> Optional[Dict]:
+        """Get image data for download"""
+
+        try:
+            image = self.image_repo.get_image_by_id(image_id, user_id)
+            if not image:
+                return None
+
+            file_path = image['file_path']
+            if not os.path.exists(file_path):
+                logger.error(f"Image file not found: {file_path}")
+                return None
+
+            with open(file_path, 'rb') as f:
+                data = f.read()
+
+            return {
+                'data': data,
+                'filename': image['original_name'],
+                'mime_type': image['mime_type'],
+                'file_size': len(data)
+            }
+
+        except Exception as e:
+            logger.error(f"Error getting image data for download: {e}")
+            return None
+
+    def get_bulk_images_data_for_download(self, image_ids: List[int], user_id: int) -> List[Dict]:
+        """Get multiple images data for bulk download"""
+
+        try:
+            images_data = []
+
+            for image_id in image_ids:
+                image_data = self.get_image_data_for_download(
+                    image_id, user_id)
+                if image_data:
+                    images_data.append(image_data)
+
+            return images_data
+
+        except Exception as e:
+            logger.error(f"Error getting bulk images data for download: {e}")
+            return []
 
 
 # Global service instance

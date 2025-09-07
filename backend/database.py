@@ -223,17 +223,26 @@ class ImageRepository:
 
         ensure_upload_directory()
 
-    def get_image_by_id(self, image_id: int) -> Optional[Dict]:
-        """Get image by ID"""
+    def get_image_by_id(self, image_id: int, user_id: int = None) -> Optional[Dict]:
+        """Get image by ID with optional user ownership check"""
 
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
 
-            cursor.execute("""
-                SELECT id, user_id, filename, original_name, file_path, 
-                       file_size, mime_type, created_at
-                FROM images WHERE id = ?
-            """, (image_id,))
+            if user_id is not None:
+                # Check ownership
+                cursor.execute("""
+                    SELECT id, user_id, filename, original_name, file_path, 
+                           file_size, mime_type, created_at
+                    FROM images WHERE id = ? AND user_id = ?
+                """, (image_id, user_id))
+            else:
+                # No ownership check
+                cursor.execute("""
+                    SELECT id, user_id, filename, original_name, file_path, 
+                           file_size, mime_type, created_at
+                    FROM images WHERE id = ?
+                """, (image_id,))
 
             row = cursor.fetchone()
 

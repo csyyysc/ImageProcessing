@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.dev
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    command: ["uv", "run", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env.dev
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: ["uv", "run", "streamlit", "run", "frontend/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+
+  # Development service (optional)
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    ports:
+      - "8000:8000"
+      - "8501:8501"
+    env_file:
+      - .env.dev
+    volumes:
+      - .:/app
+      - /app/__pycache__
+    command: ["uv", "run", "main.py", "dev"]
+    profiles:
+      - dev
+
+volumes:
+  data:
+  uploads:
+  logs:

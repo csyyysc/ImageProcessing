@@ -14,7 +14,7 @@ class ImageAPI(BaseAPI):
         super().__init__(base_url)
 
     def get_total_images(self, user_id: int) -> Optional[int]:
-        """Get total number of images"""
+        """Get total number of images of a user"""
 
         try:
             response = self.client.get(
@@ -31,7 +31,8 @@ class ImageAPI(BaseAPI):
             return None
 
     def get_images(self, user_id: int, page: int, limit: int) -> Optional[list]:
-        """Get all images"""
+        """Get all images of a user"""
+
         try:
             response = self.client.get(
                 f"{self.base_url}/api/images/?user_id={user_id}&page={page}&limit={limit}")
@@ -111,3 +112,87 @@ class ImageAPI(BaseAPI):
                 "success": False,
                 "message": f"Transform error: {str(e)}"
             }
+
+    def download_single_image(self, image_id: int, user_id: int) -> Optional[bytes]:
+        """Download a single image"""
+
+        try:
+            response = self.client.get(
+                f"{self.base_url}/api/images/download/single/{image_id}?user_id={user_id}"
+            )
+
+            if response.status_code == 200:
+                return response.content
+            elif response.status_code == 429:
+                # Rate limit exceeded
+                error_data = response.json()
+                raise Exception(
+                    f"Download limit exceeded: {error_data.get('message', 'Daily download limit exceeded')}")
+            else:
+                logger.error(
+                    f"Download failed: {response.status_code} - {response.text}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to download image: {e}")
+            raise e
+
+    def download_bulk_images(self, image_ids: list, user_id: int, format: str = "zip") -> Optional[bytes]:
+        """Download multiple images as ZIP"""
+
+        try:
+            ids_str = ",".join(map(str, image_ids))
+            response = self.client.get(
+                f"{self.base_url}/api/images/download/bulk?user_id={user_id}&image_ids={ids_str}&format={format}"
+            )
+
+            if response.status_code == 200:
+                return response.content
+            elif response.status_code == 429:
+                # Rate limit exceeded
+                error_data = response.json()
+                raise Exception(
+                    f"Download limit exceeded: {error_data.get('message', 'Daily download limit exceeded')}")
+            else:
+                logger.error(
+                    f"Bulk download failed: {response.status_code} - {response.text}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to download bulk images: {e}")
+            raise e
+
+    def get_download_stats(self, user_id: int) -> Optional[dict]:
+        """Get download and rate limit statistics"""
+        try:
+            response = self.client.get(
+                f"{self.base_url}/api/images/download/stats?user_id={user_id}"
+            )
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                logger.error(
+                    f"Failed to get download stats: {response.status_code} - {response.text}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to get download stats: {e}")
+            return None
+
+    def reset_user_limits(self, user_id: int) -> bool:
+        """Reset rate limits for a user (for testing purposes)"""
+        try:
+            response = self.client.post(
+                f"{self.base_url}/api/images/download/reset-limits?user_id={user_id}"
+            )
+            if response.status_code == 200:
+                logger.info(f"Reset rate limits for user {user_id}")
+                return True
+            else:
+                logger.error(
+                    f"Failed to reset user limits: {response.status_code}")
+                return False
+        except Exception as e:
+            logger.error(f"Error resetting user limits: {e}")
+            return False
