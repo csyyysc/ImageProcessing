@@ -21,10 +21,10 @@ def main():
     parser.add_argument(
         "command",
         nargs="?",
-        default="streamlit",
+        default="production",
         choices=["backend", "frontend", "dev",
-                 "production", "streamlit", "info", "test"],
-        help="Command to run (default: streamlit)"
+                 "production", "streamlit", "info", "test", "docker", "start"],
+        help="Command to run (default: production)"
     )
 
     args = parser.parse_args()
@@ -45,9 +45,14 @@ def main():
         print("🏭 Starting Production Environment...")
         subprocess.run([sys.executable, "scripts/production.py"], env=env)
     elif args.command == "streamlit":
-        print("🚀 Starting Streamlit Deployment (Production Mode)...")
+        print("🚀 Starting Streamlit Unified Deployment...")
+        # For Streamlit Cloud, run the unified app with embedded backend
+        subprocess.run([sys.executable, "-m", "streamlit",
+                       "run", "streamlit_unified_app.py"], env=env)
+    elif args.command == "docker":
+        print("🐳 Starting Docker Production Deployment...")
         subprocess.run(
-            [sys.executable, "scripts/streamlit_deploy.py"], env=env)
+            [sys.executable, "scripts/docker_deploy.py", "deploy"], env=env)
     elif args.command == "info":
         print_info()
     else:
@@ -69,10 +74,9 @@ def print_info():
     print("  dev       - Start both services")
     print("  production - Start both services in production mode")
     print("  streamlit - Start Streamlit deployment (production mode)")
+    print("  docker    - Deploy with Docker Compose (production)")
     print("  info      - Show this information")
     print()
-    print("Quick Start:")
-    print("  uv run python main.py dev")
 
 
 if __name__ == "__main__":

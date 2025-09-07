@@ -15,6 +15,7 @@ dependencies = [
     "passlib[bcrypt]>=1.7.4",
     "python-dotenv>=1.0.0",
     "pytest>=8.4.2",
+    "psutil>=5.9.0",
 ]
 
 [project.scripts]
