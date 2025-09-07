@@ -69,9 +69,6 @@ COPY . .
 RUN mkdir -p data uploads logs && \
     chmod 755 data uploads logs
 
-# Copy .env.prod file (required for production)
-RUN echo "📄 Using .env.prod file for production environment" && \
-    cp .env.prod .env
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
