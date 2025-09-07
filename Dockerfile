@@ -38,25 +38,6 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p data uploads logs
 
-# Copy .env.dev file if it exists, otherwise create a default one
-RUN if [ -f .env.dev ]; then \
-        echo "📄 Using .env.dev file for test environment"; \
-        cp .env.dev .env; \
-    else \
-        echo "⚠️  No .env.dev file found, creating default test configuration"; \
-        echo "API_HOST=localhost" > .env; \
-        echo "API_PORT=8000" >> .env; \
-        echo "FRONTEND_HOST=localhost" >> .env; \
-        echo "FRONTEND_PORT=8501" >> .env; \
-        echo "BACKEND_URL=http://localhost:8000" >> .env; \
-        echo "DATABASE_URL=sqlite:///./data/app.db" >> .env; \
-        echo "SECRET_KEY=test-secret-key" >> .env; \
-        echo "ACCESS_TOKEN_EXPIRE_MINUTES=30" >> .env; \
-        echo "LOG_LEVEL=INFO" >> .env; \
-        echo "DEBUG=true" >> .env; \
-        echo "ENVIRONMENT=development" >> .env; \
-    fi
-
 # Run tests to ensure everything works
 RUN uv run scripts/test.py
 
@@ -66,20 +47,8 @@ FROM base as production
 # Copy source code
 COPY . .
 
-# Create necessary directories with proper permissions
-RUN mkdir -p data uploads logs .cache/uv && \
-    chmod 755 data uploads logs .cache
-
-
-# Create non-root user for security
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-# Create cache directory and set permissions
-RUN mkdir -p /home/appuser/.cache/uv && \
-    chown -R appuser:appuser /home/appuser && \
-    chown -R appuser:appuser /app
-
-USER appuser
+# Create necessary directories
+RUN mkdir -p data uploads logs
 
 # Expose ports
 EXPOSE 8000 8501
@@ -89,4 +58,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command (can be overridden)
-CMD ["uv", "run", "main.py", "dev"]
+CMD ["uv", "run", "main.py"]
