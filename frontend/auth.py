@@ -1,7 +1,6 @@
 """
 Authentication pages - Main entry point
 """
-import streamlit as st
 from frontend.utils.auth import init_session_state, require_auth as auth_require_auth
 from frontend.components.auth import show_auth_page, create_user_info_sidebar
 
