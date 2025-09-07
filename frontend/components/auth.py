@@ -119,21 +119,6 @@ def create_user_info_sidebar():
         logger.error(f"Error creating user info sidebar: {e}")
 
 
-def create_auth_header(title: str, icon: str = "🔐"):
-    """Create compact authentication page header"""
-    try:
-        # Simple centered header
-        st.markdown("""
-        <div style="text-align: center; margin-bottom: 1rem;">
-            <h1 style="color: #2c3e50; font-size: 1.8rem; margin: 0;">
-                {icon} {title}
-            </h1>
-        </div>
-        """.format(icon=icon, title=title), unsafe_allow_html=True)
-    except Exception as e:
-        logger.error(f"Error creating auth header: {e}")
-
-
 def handle_login_submission(form_data: dict):
     """Handle login form submission"""
     try:
@@ -234,7 +219,6 @@ def handle_register_submission(form_data: dict):
 def show_login_page():
     """Display the login page"""
     try:
-        create_auth_header("Login", "🔐")
 
         form_data = create_login_form()
         if not form_data:
@@ -254,7 +238,6 @@ def show_login_page():
 def show_register_page():
     """Display the registration page"""
     try:
-        create_auth_header("Register", "📝")
 
         form_data = create_register_form()
         if not form_data:
