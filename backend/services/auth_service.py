@@ -56,7 +56,14 @@ class AuthService:
             self._record_failed_attempt(username)
             return None, "Invalid username or password"
 
-        if not jwt_service.verify_password(password, user['password_hash']):
+        try:
+            if not jwt_service.verify_password(password, user['password_hash']):
+                self._record_failed_attempt(username)
+                return None, "Invalid username or password"
+        except Exception as e:
+            # Handle cases where password hash is corrupted or uses unsupported format
+            logger.warning(
+                f"Password verification failed for user {username}: {e}")
             self._record_failed_attempt(username)
             return None, "Invalid username or password"
 

@@ -22,7 +22,6 @@ def require_auth():
     init_session_state()
 
     if not auth_require_auth():
-        st.warning("🔒 Please login to access this application")
         show_auth_page_wrapper()
         return False
     return True

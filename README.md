@@ -78,6 +78,9 @@ uv run main.py backend
 
 # Start frontend only  
 uv run main.py frontend
+
+# Start Streamlit deployment (production mode)
+uv run main.py streamlit
 ```
 
 This will start:

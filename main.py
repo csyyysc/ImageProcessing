@@ -17,10 +17,14 @@ def main():
     """Main entry point with command-line interface"""
     parser = argparse.ArgumentParser(
         description="Image Processing Application")
+
     parser.add_argument(
         "command",
-        choices=["backend", "frontend", "dev", "production", "info"],
-        help="Command to run"
+        nargs="?",
+        default="streamlit",
+        choices=["backend", "frontend", "dev",
+                 "production", "streamlit", "info", "test"],
+        help="Command to run (default: streamlit)"
     )
 
     args = parser.parse_args()
@@ -40,10 +44,15 @@ def main():
     elif args.command == "production":
         print("🏭 Starting Production Environment...")
         subprocess.run([sys.executable, "scripts/production.py"], env=env)
+    elif args.command == "streamlit":
+        print("🚀 Starting Streamlit Deployment (Production Mode)...")
+        subprocess.run(
+            [sys.executable, "scripts/streamlit_deploy.py"], env=env)
     elif args.command == "info":
         print_info()
     else:
         parser.print_help()
+        sys.exit(1)
 
 
 def print_info():
@@ -59,6 +68,7 @@ def print_info():
     print("  frontend  - Start Streamlit frontend only")
     print("  dev       - Start both services")
     print("  production - Start both services in production mode")
+    print("  streamlit - Start Streamlit deployment (production mode)")
     print("  info      - Show this information")
     print()
     print("Quick Start:")
