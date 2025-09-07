@@ -8,7 +8,8 @@ FROM python:3.11-slim as base
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_CACHE_DIR=/app/.cache/uv
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -66,13 +67,18 @@ FROM base as production
 COPY . .
 
 # Create necessary directories with proper permissions
-RUN mkdir -p data uploads logs && \
-    chmod 755 data uploads logs
+RUN mkdir -p data uploads logs .cache/uv && \
+    chmod 755 data uploads logs .cache
 
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
-RUN chown -R appuser:appuser /app
+
+# Create cache directory and set permissions
+RUN mkdir -p /home/appuser/.cache/uv && \
+    chown -R appuser:appuser /home/appuser && \
+    chown -R appuser:appuser /app
+
 USER appuser
 
 # Expose ports
