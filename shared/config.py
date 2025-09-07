@@ -28,7 +28,21 @@ class Settings:
         f"http://localhost:{FRONTEND_PORT}",
         f"http://127.0.0.1:{FRONTEND_PORT}",
         "http://localhost:3000",  # For future React frontend
+        "https://imageprocessingapp-website.onrender.com",  # Deployed frontend
     ]
+
+    # Additional CORS origins from environment variable (comma-separated)
+    ADDITIONAL_CORS_ORIGINS: str = os.getenv("ADDITIONAL_CORS_ORIGINS", "")
+
+    @property
+    def all_cors_origins(self) -> list:
+        """Get all CORS origins including additional ones from environment"""
+        origins = self.CORS_ORIGINS.copy()
+        if self.ADDITIONAL_CORS_ORIGINS:
+            additional_origins = [
+                origin.strip() for origin in self.ADDITIONAL_CORS_ORIGINS.split(",")]
+            origins.extend(additional_origins)
+        return origins
 
 
 class StreamlitSettings:
