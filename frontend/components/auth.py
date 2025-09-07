@@ -15,66 +15,82 @@ logger = logging.getLogger(__name__)
 
 
 def create_login_form():
-    """Create login form component"""
+    """Create simple login form in container"""
     try:
         with st.form("login_form"):
-            st.subheader("Welcome Back!")
+            # Simple welcome message
+            st.markdown("### 🔐 Welcome Back")
+            st.markdown("Please sign in to continue")
 
+            # Username field
             username = st.text_input(
                 "Username", placeholder="Enter your username")
+
+            # Password field
             password = st.text_input(
                 "Password", type="password", placeholder="Enter your password")
 
+            # Buttons
             col1, col2 = st.columns(2)
             with col1:
                 login_submitted = st.form_submit_button(
-                    "🚀 Login", use_container_width=True)
+                    "Login", use_container_width=True)
             with col2:
                 register_button = st.form_submit_button(
-                    "📝 Go to Register", use_container_width=True)
+                    "Register", use_container_width=True)
 
-            return {
-                'login_submitted': login_submitted,
-                'register_button': register_button,
-                'username': username,
-                'password': password
-            }
+        return {
+            'login_submitted': login_submitted,
+            'register_button': register_button,
+            'username': username,
+            'password': password
+        }
     except Exception as e:
         logger.error(f"Error creating login form: {e}")
         return None
 
 
 def create_register_form():
-    """Create registration form component"""
+    """Create simple register form in container"""
     try:
         with st.form("register_form"):
-            st.subheader("Create Your Account")
+            # Simple welcome message
+            st.markdown("### 📝 Create Account")
+            st.markdown("Join us to get started")
 
+            # Username field
             username = st.text_input(
                 "Username", placeholder="Choose a username")
+
+            # Email field
             email = st.text_input("Email (optional)",
-                                  placeholder="your.email@example.com")
+                                  placeholder="your@email.com")
+
+            # Password field
             password = st.text_input(
-                "Password", type="password", placeholder="Choose a strong password")
+                "Password", type="password", placeholder="Choose a password")
+
+            # Confirm password field
             confirm_password = st.text_input(
                 "Confirm Password", type="password", placeholder="Confirm your password")
 
+            # Buttons
             col1, col2 = st.columns(2)
             with col1:
                 register_submitted = st.form_submit_button(
-                    "🎉 Register", use_container_width=True)
+                    "Register", use_container_width=True)
             with col2:
                 login_button = st.form_submit_button(
-                    "🔐 Go to Login", use_container_width=True)
+                    "Login", use_container_width=True)
 
-            return {
-                'register_submitted': register_submitted,
-                'login_button': login_button,
-                'username': username,
-                'email': email,
-                'password': password,
-                'confirm_password': confirm_password
-            }
+        return {
+            'register_submitted': register_submitted,
+            'login_button': login_button,
+            'username': username,
+            'email': email,
+            'password': password,
+            'confirm_password': confirm_password
+        }
     except Exception as e:
         logger.error(f"Error creating register form: {e}")
         return None
@@ -104,10 +120,16 @@ def create_user_info_sidebar():
 
 
 def create_auth_header(title: str, icon: str = "🔐"):
-    """Create authentication page header"""
+    """Create compact authentication page header"""
     try:
-        st.title(f"{icon} {title}")
-        st.markdown("---")
+        # Simple centered header
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <h1 style="color: #2c3e50; font-size: 1.8rem; margin: 0;">
+                {icon} {title}
+            </h1>
+        </div>
+        """.format(icon=icon, title=title), unsafe_allow_html=True)
     except Exception as e:
         logger.error(f"Error creating auth header: {e}")
 

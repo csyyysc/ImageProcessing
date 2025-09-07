@@ -26,7 +26,7 @@ def create_image_container_css() -> str:
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #f8f9fa;
+        background-color: #ffffff;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
@@ -188,11 +188,101 @@ def apply_sidebar_css() -> None:
         logger.error(f"Error applying sidebar CSS: {e}")
 
 
+def create_auth_form_css() -> str:
+    """
+    Create CSS for simple authentication forms
+
+    Returns:
+        CSS string for authentication forms
+    """
+    return """
+    <style>
+    /* Simple Authentication Form Styling */
+    .stForm {
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        margin: 2rem auto;
+    }
+    
+    .stForm > div {
+        background: transparent;
+    }
+    
+    /* Form styling */
+    .stTextInput > div > div > input {
+        border: 1px solid #bdc3c7;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    
+    .stButton > button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Welcome message styling */
+    .stMarkdown h3 {
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stMarkdown p {
+        color: #7f8c8d;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Error and success message styling */
+    .stAlert {
+        border-radius: 8px;
+        border: none;
+        margin: 1rem 0;
+    }
+    
+    .stSuccess {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .stError {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    </style>
+    """
+
+
+def apply_auth_form_css() -> None:
+    """Apply authentication form CSS to the page"""
+    try:
+        st.markdown(create_auth_form_css(), unsafe_allow_html=True)
+    except Exception as e:
+        logger.error(f"Error applying auth form CSS: {e}")
+
+
 def apply_all_css() -> None:
     """Apply all CSS styles to the page"""
     try:
         apply_image_container_css()
         apply_button_css()
         apply_sidebar_css()
+        apply_auth_form_css()
     except Exception as e:
         logger.error(f"Error applying CSS: {e}")

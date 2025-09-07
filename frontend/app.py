@@ -50,14 +50,14 @@ def start_frontend():
 def main():
     """Main Streamlit application"""
 
+    # Apply all CSS styles for consistent UI (including auth forms)
+    apply_all_css()
+
     if not require_auth():
         return
 
     # Check for download success messages and show popups
     check_and_show_download_success()
-
-    # Apply all CSS styles for consistent UI
-    apply_all_css()
 
     st.title("Image Processing Application")
     st.markdown("---")
