@@ -38,6 +38,9 @@ RUN mkdir -p data uploads logs && \
 # Define volumes for persistent data
 VOLUME ["/app/data", "/app/uploads", "/app/logs"]
 
+# Set Python path to include the project root
+ENV PYTHONPATH=/app
+
 # Expose port
 EXPOSE 8000
 

@@ -31,6 +31,9 @@ RUN uv sync --frozen
 # Copy source code
 COPY . .
 
+# Set Python path to include the project root
+ENV PYTHONPATH=/app
+
 # Expose port
 EXPOSE 8501
 
