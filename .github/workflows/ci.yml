@@ -124,7 +124,7 @@ jobs:
           fi
           
       - name: Show final URL
-        run: echo "🎯 Final BACKEND_URL: ${{ env.FINAL_BACKEND_URL }}"
+        run: echo "🎯 Final BACKEND_URL ${{ env.FINAL_BACKEND_URL }}"
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
