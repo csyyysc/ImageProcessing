@@ -279,6 +279,18 @@ def apply_auth_form_css() -> None:
 
 def apply_all_css() -> None:
     """Apply all CSS styles to the page"""
+
+    # Hide Main Menu and Footer
+    st.markdown(
+        """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """,
+        unsafe_allow_html=True
+    )
+
     try:
         apply_image_container_css()
         apply_button_css()
