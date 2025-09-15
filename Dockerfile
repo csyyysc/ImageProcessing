@@ -1,54 +1,88 @@
 # Multi-stage Dockerfile for Image Processing Application
-# This Dockerfile ensures tests pass before building the final image
+# Optimized for minimal image size
 
-# Stage 1: Base image with Python and uv
-FROM python:3.11-slim as base
+# Stage 1: Base image with Python and uv (Alpine for smaller size)
+FROM python:3.11-alpine as base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    UV_CACHE_DIR=/app/.cache/uv
+    UV_CACHE_DIR=/tmp/uv \
+    PATH="/app/.venv/bin:$PATH"
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
+# Install system dependencies in one layer and clean up
+RUN apk add --no-cache --virtual .build-deps \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    && apk add --no-cache \
     curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv package manager
-RUN pip install uv
+    && pip install --no-cache-dir uv \
+    && apk del .build-deps
 
 # Set work directory
 WORKDIR /app
 
-# Copy dependency files
-COPY pyproject.toml uv.lock ./
+# Copy dependency files (use production config for smaller dependencies)
+COPY pyproject.prod.toml pyproject.toml
+COPY uv.lock ./
 
-# Install dependencies
-RUN uv sync --frozen
+# Install only production dependencies and clean up cache in one layer
+RUN uv sync --frozen --no-dev \
+    && uv cache clean \
+    && rm -rf /tmp/uv \
+    && find /app/.venv -name "*.pyc" -delete \
+    && find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
 # Stage 2: Test stage - runs tests before building final image
 FROM base as test
 
-# Copy source code
+# Copy original pyproject.toml with test dependencies
+COPY pyproject.toml ./
+# Install test dependencies
+RUN uv sync --frozen
+
+# Copy source code (exclude unnecessary files via .dockerignore)
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p data uploads logs
+# Create necessary directories and run tests in one layer
+RUN mkdir -p data uploads logs \
+    && uv run scripts/test.py
 
-# Run tests to ensure everything works
-RUN uv run scripts/test.py
+# Stage 3: Production image (distroless for minimal attack surface)
+FROM python:3.11-alpine as production
 
-# Stage 3: Production image
-FROM base as production
+# Copy only the virtual environment from base stage
+COPY --from=base /app/.venv /app/.venv
 
-# Copy source code
-COPY . .
+# Set environment variables
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
-# Create necessary directories
-RUN mkdir -p data uploads logs
+# Install only runtime dependencies (curl for health check)
+RUN apk add --no-cache curl
+
+# Set work directory
+WORKDIR /app
+
+# Copy only necessary application files
+COPY main.py ./
+COPY backend/ ./backend/
+COPY frontend/ ./frontend/
+COPY shared/ ./shared/
+COPY scripts/ ./scripts/
+
+# Create necessary directories in one layer
+RUN mkdir -p data uploads logs \
+    && addgroup -g 1001 -S appgroup \
+    && adduser -S appuser -u 1001 -G appgroup \
+    && chown -R appuser:appgroup /app
+
+# Switch to non-root user for security
+USER appuser
 
 # Expose ports
 EXPOSE 8000 8501
@@ -58,4 +92,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command (can be overridden)
-CMD ["uv", "run", "main.py"]
+CMD ["python", "main.py"]

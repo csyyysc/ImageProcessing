@@ -90,3 +90,72 @@ docker-compose*
 # Results and temporary files
 results_*/
 temp/
+
+# Additional optimization excludes
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test files (not needed in production)
+**/tests/
+test_*.py
+*_test.py
+
+# Development tools
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Large files that shouldn't be in containers
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.iso
+*.dmg
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Package files
+*.egg
+*.egg-info/
+*.whl
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Large data files (should be mounted as volumes)
+*.csv
+*.json
+*.xml
+data/*.db
+data/*.sqlite*
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Deployment files
+kubernetes/
+helm/
+terraform/

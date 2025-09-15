@@ -1,0 +1,22 @@
+[project]
+name = "image-processing-app"
+version = "1.0.0"
+description = "Full-stack application with FastAPI backend and Streamlit frontend"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "streamlit>=1.28.0",
+    "httpx>=0.25.0",
+    "pydantic[email]>=2.4.0",
+    "python-multipart>=0.0.6",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-dotenv>=1.0.0",
+    "psutil>=5.9.0",
+]
+
+[project.scripts]
+backend = "backend.main:start_backend"
+frontend = "frontend.app:start_frontend"

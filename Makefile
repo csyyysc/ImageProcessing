@@ -16,7 +16,7 @@ help:
 # Build the Docker image
 build:
 	@echo "🔨 Building Docker image..."
-	docker build -t image-processing-app .
+	./build.sh
 
 # Run tests in Docker
 test:
