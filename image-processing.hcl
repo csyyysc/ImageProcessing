@@ -82,11 +82,6 @@ job "image-processing" {
       config {
         image = "ghcr.io/csyyysc/image-processing-frontend"
         ports = ["image-processing"]
-        
-        # Environment variables
-        env = {
-          BACKEND_URL = "http://${NOMAD_IP}:8000"
-        }
       }
 
       resources {
