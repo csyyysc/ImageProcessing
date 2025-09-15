@@ -9,13 +9,8 @@ Run with: uv run scripts/test.py
 import sys
 import requests
 import subprocess
-from pathlib import Path
 
 from shared.config import settings
-
-# Add the project root to the Python path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
 
 
 def check_backend_health():

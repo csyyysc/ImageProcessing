@@ -31,8 +31,8 @@ RUN uv sync --frozen
 # Copy source code
 COPY . .
 
-# Set Python path to include the project root
-ENV PYTHONPATH=/app
+# Set Python path to include the project root and all subdirectories
+ENV PYTHONPATH=/app:/app/backend:/app/frontend:/app/shared:/app/scripts
 
 # Expose port
 EXPOSE 8501

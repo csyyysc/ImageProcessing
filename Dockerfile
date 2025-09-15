@@ -1,5 +1,5 @@
-# Multi-stage Dockerfile for Image Processing Application
-# Optimized for minimal image size
+# Production Dockerfile for Image Processing Application
+# Optimized for minimal image size and security
 
 # Stage 1: Base image with Python and uv (Alpine for smaller size)
 FROM python:3.11-alpine as base
@@ -36,22 +36,7 @@ RUN uv sync --frozen --no-dev \
     && find /app/.venv -name "*.pyc" -delete \
     && find /app/.venv -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
-# Stage 2: Test stage - runs tests before building final image
-FROM base as test
-
-# Copy original pyproject.toml with test dependencies
-COPY pyproject.toml ./
-# Install test dependencies
-RUN uv sync --frozen
-
-# Copy source code (exclude unnecessary files via .dockerignore)
-COPY . .
-
-# Create necessary directories and run tests in one layer
-RUN mkdir -p data uploads logs \
-    && uv run scripts/test.py
-
-# Stage 3: Production image (distroless for minimal attack surface)
+# Stage 2: Production image (minimal attack surface)
 FROM python:3.11-alpine as production
 
 # Copy only the virtual environment from base stage

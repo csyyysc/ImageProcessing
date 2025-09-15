@@ -2,6 +2,7 @@
 Full-stack image processing application with FastAPI backend and Streamlit frontend
 """
 
+
 import os
 import sys
 import argparse

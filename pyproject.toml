@@ -20,3 +20,12 @@ dependencies = [
 [project.scripts]
 backend = "backend.main:start_backend"
 frontend = "frontend.app:start_frontend"
+
+[tool.pytest.ini_options]
+testpaths = ["backend", "frontend", "shared", "scripts"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+# Ensure proper import path
+pythonpath = "."

@@ -1,0 +1,46 @@
+# Test Dockerfile for Image Processing Application
+# Runs tests to validate code before production build
+
+FROM python:3.11-alpine
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    UV_CACHE_DIR=/tmp/uv \
+    PATH="/app/.venv/bin:$PATH"
+
+# Install system dependencies for testing
+RUN apk add --no-cache --virtual .build-deps \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    && apk add --no-cache \
+    curl \
+    && pip install --no-cache-dir uv \
+    && apk del .build-deps
+
+# Set work directory
+WORKDIR /app
+
+# Copy dependency files (original pyproject.toml with test dependencies)
+COPY pyproject.toml uv.lock ./
+
+# Install all dependencies including test dependencies
+RUN uv sync --frozen
+
+# Copy source code
+COPY . .
+
+# Create necessary directories for tests
+RUN mkdir -p data uploads logs
+
+# Set Python path to include the project root and all subdirectories
+ENV PYTHONPATH=/app:/app/backend:/app/frontend:/app/shared:/app/scripts
+
+# Run tests
+RUN uv run scripts/test.py
+
+# Test command (can be overridden for different test scenarios)
+CMD ["uv", "run", "scripts/test.py"]
