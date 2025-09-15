@@ -39,13 +39,17 @@ RUN uv sync --frozen --no-dev \
 # Stage 2: Production image (minimal attack surface)
 FROM python:3.11-alpine as production
 
+# Accept build arguments from GitHub Actions
+ARG BACKEND_URL
+
 # Copy only the virtual environment from base stage
 COPY --from=base /app/.venv /app/.venv
 
-# Set environment variables
+# Set environment variables from build args
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    BACKEND_URL=${BACKEND_URL} \
 
 # Install only runtime dependencies (curl for health check)
 RUN apk add --no-cache curl

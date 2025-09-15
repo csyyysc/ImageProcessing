@@ -28,7 +28,7 @@ class Settings:
         f"http://localhost:{FRONTEND_PORT}",
         f"http://127.0.0.1:{FRONTEND_PORT}",
         "http://localhost:3000",  # For future React frontend
-        "https://imageprocessingapp-website.onrender.com",  # Deployed frontend
+        "https://image-processing.csyyysc.com",  # Deployed frontend
     ]
 
     # Additional CORS origins from environment variable (comma-separated)

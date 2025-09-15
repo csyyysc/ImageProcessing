@@ -9,7 +9,14 @@ class BaseAPI:
 
     def __init__(self, base_url: str):
         self.base_url = base_url
-        self.client = httpx.Client(timeout=30.0)
+        logger.info(f"Initializing API client with base_url: {base_url}")
+
+        # Configure httpx client with SSL verification handling
+        self.client = httpx.Client(
+            timeout=30.0,
+            verify=True,  # Keep SSL verification enabled for security
+            follow_redirects=True
+        )
 
     def health_check(self) -> bool:
         """Check if the API is healthy"""

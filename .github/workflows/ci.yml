@@ -116,4 +116,6 @@ jobs:
           cache-from: type=gha,key=frontend
           cache-to: type=gha,mode=max,key=frontend
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            BACKEND_URL=${{ vars.BACKEND_URL }}
 
