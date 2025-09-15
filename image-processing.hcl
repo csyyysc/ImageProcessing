@@ -41,25 +41,6 @@ job "image-processing" {
         ]
       }
 
-      # Create local directories
-      template {
-        data = ""
-        destination = "local/data/.gitkeep"
-        change_mode = "noop"
-      }
-      
-      template {
-        data = ""
-        destination = "local/uploads/.gitkeep"  
-        change_mode = "noop"
-      }
-      
-      template {
-        data = ""
-        destination = "local/logs/.gitkeep"
-        change_mode = "noop"
-      }
-
       resources {
         cpu    = 128
         memory = 128
