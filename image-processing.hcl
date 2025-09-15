@@ -45,16 +45,19 @@ job "image-processing" {
       template {
         data = ""
         destination = "local/data/.gitkeep"
+        change_mode = "noop"
       }
       
       template {
         data = ""
-        destination = "local/uploads/.gitkeep"
+        destination = "local/uploads/.gitkeep"  
+        change_mode = "noop"
       }
       
       template {
         data = ""
         destination = "local/logs/.gitkeep"
+        change_mode = "noop"
       }
 
       resources {
@@ -101,7 +104,7 @@ job "image-processing" {
         
         # Environment variables
         env = {
-          BACKEND_URL = "${NOMAD_UPSTREAM_ADDR_image-processing-backend}"
+          BACKEND_URL = "http://${NOMAD_IP}:8000"
         }
       }
 
@@ -124,18 +127,6 @@ job "image-processing" {
           check_restart {
             limit = 3
             grace = "30s"
-          }
-        }
-
-        # Connect to backend service
-        connect {
-          sidecar_service {
-            proxy {
-              upstreams {
-                destination_name = "image-processing-backend"
-                local_bind_port  = 8000
-              }
-            }
           }
         }
       }
