@@ -32,7 +32,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen \
     && apk del .build-deps
 
-# Copy source code
+# Copy all source code (test Makefile disables .dockerignore)
 COPY . .
 
 # Create necessary directories for tests

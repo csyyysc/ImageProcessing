@@ -20,8 +20,12 @@ help:
 # Run tests only
 test:
 	@echo "🧪 Running tests in Docker..."
-	sudo docker build -f Dockerfile.test -t image-processing-app-test .
-	sudo docker run --rm image-processing-app-test
+	@# Rename .dockerignore to allow test files
+	@if [ -f .dockerignore ]; then mv .dockerignore .dockerignore.bak; fi
+	@sudo docker build -f Dockerfile.test -t image-processing-app-test . || (mv .dockerignore.bak .dockerignore 2>/dev/null; exit 1)
+	@# Restore .dockerignore
+	@if [ -f .dockerignore.bak ]; then mv .dockerignore.bak .dockerignore; fi
+	@sudo docker run --rm image-processing-app-test
 
 # Build production images only (assumes tests already passed)
 build:

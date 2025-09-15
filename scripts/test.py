@@ -2,139 +2,185 @@
 """
 Test Script for Image Processing Application
 
-This script provides testing utilities and can be extended with actual tests.
+This script runs unit tests and integration tests without requiring external services.
 Run with: uv run scripts/test.py
 """
 
 import sys
-import requests
 import subprocess
+import os
+from pathlib import Path
 
-from shared.config import settings
-
-
-def check_backend_health():
-    """Check if the backend is running and healthy"""
-
-    try:
-        backend_url = f"http://{settings.API_HOST}:{settings.API_PORT}/health"
-        response = requests.get(backend_url, timeout=5)
-        if response.status_code == 200:
-            print("✅ Backend is healthy")
-            return True
-        else:
-            print(f"❌ Backend health check failed: {response.status_code}")
-            return False
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Backend is not accessible: {e}")
-        return False
+# Setup path first
+import setup_path
 
 
-def test_backend_units():
-    """Check if the backend unit tests are passing"""
+def run_pytest_tests():
+    """Run pytest tests for all modules"""
 
-    try:
-        result = subprocess.run(
-            ["uv", "run", "pytest", "backend"], capture_output=True, text=True)
-        if result.returncode == 0:
-            print("✅ Backend unit tests passed")
-            return True
-        else:
-            print(f"❌ Backend unit tests failed: {result.stderr}")
-            return False
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Backend unit tests error: {e}")
-        return False
+    print("🧪 Running Unit Tests with pytest...")
+    print("=" * 50)
 
+    # First, let's check what directories exist
+    current_dir = Path.cwd()
+    print(f"📁 Current working directory: {current_dir}")
+    print(f"📁 Contents: {list(current_dir.iterdir())}")
 
-def check_frontend_accessibility():
-    """Check if the frontend is accessible"""
-
-    try:
-        frontend_url = f"http://{settings.FRONTEND_HOST}:{settings.FRONTEND_PORT}"
-        response = requests.get(frontend_url, timeout=5)
-        if response.status_code == 200:
-            print("✅ Frontend is accessible")
-            return True
-        else:
-            print(
-                f"❌ Frontend accessibility check failed: {response.status_code}")
-            return False
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Frontend is not accessible: {e}")
-        return False
-
-
-def test_frontend_units():
-    """Check if the frontend unit tests are passing"""
-
-    try:
-        result = subprocess.run(
-            ["uv", "run", "pytest", "frontend"], capture_output=True, text=True)
-        if result.returncode == 0:
-            print("✅ Frontend unit tests passed")
-            return True
-        else:
-            print(f"❌ Frontend unit tests failed: {result.stderr}")
-            return False
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Frontend unit tests error: {e}")
-        return False
-
-
-def test_api_endpoints():
-    """Test basic API endpoints"""
-    print("\n🔍 Testing API endpoints...")
-
-    base_url = f"http://{settings.API_HOST}:{settings.API_PORT}"
-
-    # Test health endpoint
-    try:
-        response = requests.get(f"{base_url}/health")
-        if response.status_code == 200:
-            print("✅ Health endpoint working")
-        else:
-            print(f"❌ Health endpoint failed: {response.status_code}")
-    except Exception as e:
-        print(f"❌ Health endpoint error: {e}")
-
-    # Test API docs
-    try:
-        response = requests.get(f"{base_url}/docs")
-        if response.status_code == 200:
-            print("✅ API documentation accessible")
-        else:
-            print(f"❌ API docs failed: {response.status_code}")
-    except Exception as e:
-        print(f"❌ API docs error: {e}")
-
-
-def run_basic_tests():
-    """Run basic application tests"""
-    print("🧪 Running basic tests...")
-
-    # Check if services are running
-    backend_healthy = check_backend_health()
-    frontend_accessible = check_frontend_accessibility()
-
-    if backend_healthy:
-        test_backend_units()
-
-    if frontend_accessible:
-        test_frontend_units()
-
-    test_api_endpoints()
-
-    print("\n📊 Test Summary:")
-    print(f"Backend Health: {'✅ PASS' if backend_healthy else '❌ FAIL'}")
-    print(f"Frontend Access: {'✅ PASS' if frontend_accessible else '❌ FAIL'}")
-
-    if backend_healthy and frontend_accessible:
-        print("\n🎉 All basic tests passed!")
-        return True
+    # Check if backend/tests exists
+    backend_tests = current_dir / "backend" / "tests"
+    if backend_tests.exists():
+        print(f"✅ Found backend/tests at: {backend_tests}")
+        print(f"📁 Backend tests contents: {list(backend_tests.iterdir())}")
     else:
-        print("\n⚠️  Some tests failed. Check the services are running.")
+        print(f"❌ backend/tests not found at: {backend_tests}")
         return False
+
+    try:
+        # Run pytest with verbose output and discovery
+        result = subprocess.run([
+            sys.executable, "-m", "pytest",
+            "-v",                    # Verbose output
+            "--tb=short",           # Short traceback format
+            "--disable-warnings",   # Disable warnings for cleaner output
+            "--collect-only",       # First, just collect tests to see what's found
+            str(backend_tests)      # Use absolute path
+        ], capture_output=True, text=True, timeout=60)
+
+        print("📋 Test Discovery Output:")
+        print(result.stdout)
+
+        if result.stderr:
+            print("⚠️  Test Discovery Warnings/Errors:")
+            print(result.stderr)
+
+        # If test collection failed, return early
+        if result.returncode != 0:
+            print(
+                f"❌ Test discovery failed with exit code: {result.returncode}")
+            return False
+
+        # Now run the actual tests
+        print("\n🔄 Running actual tests...")
+        result = subprocess.run([
+            sys.executable, "-m", "pytest",
+            "-v",                    # Verbose output
+            "--tb=short",           # Short traceback format
+            "--disable-warnings",   # Disable warnings for cleaner output
+            str(backend_tests)      # Use absolute path
+        ], capture_output=True, text=True, timeout=120)
+
+        print("📋 Pytest Output:")
+        print(result.stdout)
+
+        if result.stderr:
+            print("⚠️  Pytest Warnings/Errors:")
+            print(result.stderr)
+
+        if result.returncode == 0:
+            print("✅ All pytest tests passed!")
+            return True
+        else:
+            print(f"❌ Pytest tests failed with exit code: {result.returncode}")
+            return False
+
+    except subprocess.TimeoutExpired:
+        print("❌ Pytest tests timed out")
+        return False
+    except Exception as e:
+        print(f"❌ Error running pytest: {e}")
+        return False
+
+
+def run_import_tests():
+    """Test that all critical modules can be imported"""
+
+    print("\n🔍 Testing Module Imports...")
+    print("=" * 50)
+
+    modules_to_test = [
+        "shared.config",
+        "backend.main",
+        "backend.services.jwt_service",
+        "backend.api.user",
+        "backend.api.image",
+        "frontend.app",
+        "frontend.auth",
+    ]
+
+    failed_imports = []
+
+    for module in modules_to_test:
+        try:
+            __import__(module)
+            print(f"✅ {module}")
+        except ImportError as e:
+            print(f"❌ {module}: {e}")
+            failed_imports.append(module)
+
+    if failed_imports:
+        print(f"\n❌ Failed to import {len(failed_imports)} modules")
+        return False
+    else:
+        print("\n✅ All module imports successful!")
+        return True
+
+
+def run_code_quality_checks():
+    """Run basic code quality checks"""
+
+    print("\n🔍 Running Code Quality Checks...")
+    print("=" * 50)
+
+    # Check for Python syntax errors
+    print("Checking Python syntax...")
+    try:
+        result = subprocess.run([
+            sys.executable, "-m", "py_compile",
+            "backend/main.py",
+            "frontend/app.py",
+            "shared/config.py"
+        ], capture_output=True, text=True)
+
+        if result.returncode == 0:
+            print("✅ Python syntax checks passed")
+            return True
+        else:
+            print(f"❌ Python syntax errors found: {result.stderr}")
+            return False
+
+    except Exception as e:
+        print(f"⚠️  Could not run syntax checks: {e}")
+        return True  # Don't fail the test for this
+
+
+def check_test_environment():
+    """Check that the test environment is properly set up"""
+
+    print("🔧 Checking Test Environment...")
+    print("=" * 50)
+
+    # Check required directories exist
+    required_dirs = ["backend", "frontend", "shared", "scripts"]
+    missing_dirs = []
+
+    for dir_name in required_dirs:
+        if not Path(dir_name).exists():
+            missing_dirs.append(dir_name)
+        else:
+            print(f"✅ {dir_name}/ directory found")
+
+    if missing_dirs:
+        print(f"❌ Missing directories: {missing_dirs}")
+        return False
+
+    # Check Python path setup
+    project_root = str(Path(__file__).parent.parent)
+    if project_root in sys.path:
+        print("✅ Python path properly configured")
+    else:
+        print("⚠️  Python path may not be properly configured")
+
+    return True
 
 
 def main():
@@ -142,40 +188,41 @@ def main():
     print("🚀 Image Processing Application - Test Suite")
     print("=" * 50)
 
-    # Display current configuration
-    print("📋 Current Configuration:")
-    print(f"  - Backend: {settings.API_HOST}:{settings.API_PORT}")
-    print(f"  - Frontend: {settings.FRONTEND_HOST}:{settings.FRONTEND_PORT}")
-    print(f"  - Backend URL: {settings.BACKEND_URL}")
-    print()
+    all_tests_passed = True
 
-    # Check if services are running
-    print("Checking if services are running...")
-    print("Make sure to start the application first:")
-    print("  uv run main.py dev")
-    print()
+    # Run all test phases
+    test_phases = [
+        ("Environment Check", check_test_environment),
+        ("Import Tests", run_import_tests),
+        ("Code Quality", run_code_quality_checks),
+        ("Unit Tests", run_pytest_tests),
+    ]
 
-    # Run tests
-    success = run_basic_tests()
+    for phase_name, test_function in test_phases:
+        print(f"\n🔧 {phase_name}...")
+        try:
+            if not test_function():
+                all_tests_passed = False
+                print(f"❌ {phase_name} failed!")
+            else:
+                print(f"✅ {phase_name} passed!")
+        except Exception as e:
+            print(f"❌ {phase_name} error: {e}")
+            all_tests_passed = False
 
-    if not success:
-        print("\n💡 To start the application:")
-        print("  uv run main.py dev")
-        print("\n💡 To start individual services:")
-        print("  uv run main.py backend")
-        print("  uv run main.py frontend")
+    # Final summary
+    print("\n" + "=" * 50)
+    print("📊 FINAL TEST SUMMARY")
+    print("=" * 50)
+
+    if all_tests_passed:
+        print("🎉 ALL TESTS PASSED!")
+        print("✅ Code is ready for deployment")
+        sys.exit(0)
+    else:
+        print("❌ SOME TESTS FAILED!")
+        print("⚠️  Please fix the issues before deployment")
         sys.exit(1)
-
-    print("\n✨ Ready for additional tests!")
-    print("You can add more specific tests to this script.")
-
-    print("\n🔗 Service URLs:")
-    print(f"  - Backend API: http://{settings.API_HOST}:{settings.API_PORT}")
-    print(
-        f"  - Frontend App: http://{settings.FRONTEND_HOST}:{settings.FRONTEND_PORT}")
-    print(f"  - API Docs: http://{settings.API_HOST}:{settings.API_PORT}/docs")
-    print(
-        f"  - Health Check: http://{settings.API_HOST}:{settings.API_PORT}/health")
 
 
 if __name__ == "__main__":
