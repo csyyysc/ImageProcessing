@@ -16,10 +16,11 @@ RUN apk add --no-cache --virtual .build-deps \
     gcc \
     musl-dev \
     libffi-dev \
+    python3-dev \
+    linux-headers \
     && apk add --no-cache \
     curl \
-    && pip install --no-cache-dir uv \
-    && apk del .build-deps
+    && pip install --no-cache-dir uv
 
 # Set work directory
 WORKDIR /app
@@ -28,7 +29,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install all dependencies including test dependencies
-RUN uv sync --frozen
+RUN uv sync --frozen \
+    && apk del .build-deps
 
 # Copy source code
 COPY . .
