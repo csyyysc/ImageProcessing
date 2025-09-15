@@ -11,8 +11,10 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    UV_CACHE_DIR=/app/.cache/uv \
-    BACKEND_URL=${BACKEND_URL}
+    UV_CACHE_DIR=/app/.cache/uv
+
+# Set BACKEND_URL only if the build arg is not empty
+ENV BACKEND_URL=${BACKEND_URL}
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -39,7 +41,9 @@ COPY . .
 ENV PYTHONPATH=/app:/app/backend:/app/frontend:/app/shared:/app/scripts
 
 # Debug: Print environment variables during build (will show in build logs)
-RUN echo "🔍 Build-time BACKEND_URL: ${BACKEND_URL}"
+RUN echo "🔍 Build-time BACKEND_URL ARG: '${BACKEND_URL}'" && \
+    echo "🔍 Build-time BACKEND_URL ENV: '$BACKEND_URL'" && \
+    env | grep -E "(BACKEND|API)" || echo "No BACKEND/API env vars found"
 
 # Expose port
 EXPOSE 8501

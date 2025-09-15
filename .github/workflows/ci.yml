@@ -105,6 +105,27 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
             type=sha,format=short
 
+      - name: Debug and set environment variables
+        run: |
+          echo "🔍 Available variables:"
+          echo "  BACKEND_URL (vars): '${{ vars.BACKEND_URL }}'"
+          echo "  BACKEND_URL (secrets): '${{ secrets.BACKEND_URL }}'"
+          
+          # Set the BACKEND_URL with fallbacks
+          if [ -n "${{ vars.BACKEND_URL }}" ]; then
+            echo "✅ Using vars.BACKEND_URL"
+            echo "FINAL_BACKEND_URL=${{ vars.BACKEND_URL }}" >> $GITHUB_ENV
+          elif [ -n "${{ secrets.BACKEND_URL }}" ]; then
+            echo "✅ Using secrets.BACKEND_URL" 
+            echo "FINAL_BACKEND_URL=${{ secrets.BACKEND_URL }}" >> $GITHUB_ENV
+          else
+            echo "⚠️  Using fallback URL"
+            echo "FINAL_BACKEND_URL=https://image-processing-api.csyyysc.com" >> $GITHUB_ENV
+          fi
+          
+      - name: Show final URL
+        run: echo "🎯 Final BACKEND_URL: ${{ env.FINAL_BACKEND_URL }}"
+
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
@@ -117,5 +138,5 @@ jobs:
           cache-to: type=gha,mode=max,key=frontend
           platforms: linux/amd64,linux/arm64
           build-args: |
-            BACKEND_URL=${{ vars.BACKEND_URL }}
+            BACKEND_URL=${{ env.FINAL_BACKEND_URL }}
 
