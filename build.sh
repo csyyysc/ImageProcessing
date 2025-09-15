@@ -6,7 +6,7 @@
 echo "🚀 Building latest Docker image..."
 
 # Build the latest image
-sudo docker build -t ghcr.io/csyyysc/image-processing --target production .
+docker build -t ghcr.io/csyyysc/image-processing --target production .
 
 if [ $? -eq 0 ]; then
     echo "✅ Build successful!"

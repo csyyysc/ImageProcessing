@@ -16,69 +16,69 @@ help:
 # Build the Docker image
 build:
 	@echo "🔨 Building Docker image..."
-	./build.sh
+	sudo ./build.sh
 
 # Run tests in Docker
 test:
 	@echo "🧪 Running tests in Docker..."
-	docker build --target test -t image-processing-app-test .
-	docker run --rm image-processing-app-test
+	sudo docker build --target test -t image-processing-app-test .
+	sudo docker run --rm image-processing-app-test
 
 # Development mode
 dev:
 	@echo "🚀 Starting development environment..."
-	docker-compose -f docker-compose.dev.yml --profile dev up --build
+	sudo docker-compose -f docker-compose.dev.yml --profile dev up --build
 
 # Production mode
 prod:
 	@echo "🏭 Starting production environment..."
-	docker-compose up --build -d
+	sudo docker-compose up -d
 
 # Production with nginx
 prod-nginx:
 	@echo "🏭 Starting production environment with nginx..."
-	docker-compose --profile nginx up --build -d
+	sudo docker-compose --profile nginx up --build -d
 
 # Stop all containers
 stop:
 	@echo "🛑 Stopping all containers..."
-	docker-compose down
-	docker-compose down
+	sudo docker-compose down
+	sudo docker-compose down
 
 # Show logs
 logs:
 	@echo "📋 Showing container logs..."
-	docker-compose logs -f
+	sudo docker-compose logs -f
 
 # Production logs
 logs-prod:
 	@echo "📋 Showing production logs..."
-	docker-compose logs -f
+	sudo docker-compose logs -f
 
 # Clean up Docker resources
 clean:
 	@echo "🧹 Cleaning up Docker resources..."
-	docker-compose down -v
-	docker-compose down -v
-	docker system prune -f
-	docker volume prune -f
+	sudo docker-compose down -v
+	sudo docker-compose down -v
+	sudo docker system prune -f
+	sudo docker volume prune -f
 
 # Full clean (including images)
 clean-all:
 	@echo "🧹 Full cleanup including images..."
-	docker-compose down -v --rmi all
-	docker-compose down -v --rmi all
-	docker system prune -af
-	docker volume prune -f
+	sudo docker-compose down -v --rmi all
+	sudo docker-compose down -v --rmi all
+	sudo docker system prune -af
+	sudo docker volume prune -f
 
 # Check if services are running
 status:
 	@echo "📊 Container status:"
-	docker-compose ps
+	sudo docker-compose ps
 	@echo "\n📊 Production container status:"
-	docker-compose ps
+	sudo docker-compose ps
 
 # Run production setup script
 setup-prod:
 	@echo "🔧 Running production setup..."
-	docker run --rm -v $(PWD):/app -w /app python:3.11-slim bash -c "pip install uv && uv run scripts/production.py"
+	sudo docker run --rm -v $(PWD):/app -w /app python:3.11-slim bash -c "pip install uv && uv run scripts/production.py"

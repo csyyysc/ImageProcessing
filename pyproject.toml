@@ -1,6 +1,6 @@
 [project]
-name = "i-app"
-version = "0.1.0"
+name = "image-processing-app"
+version = "1.0.0"
 description = "Full-stack application with FastAPI backend and Streamlit frontend"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,7 +14,6 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
     "python-dotenv>=1.0.0",
-    "pytest>=8.4.2",
     "psutil>=5.9.0",
 ]
 

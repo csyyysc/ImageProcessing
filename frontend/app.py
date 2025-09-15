@@ -2,21 +2,24 @@
 Streamlit Frontend Application
 """
 
+from frontend.components.buttons import create_download_button, create_bulk_download_button
+from frontend.components.ui import apply_all_css, create_sidebar_section
+from frontend.utils.download import (
+    handle_download_error, show_download_error,
+    trigger_direct_download, check_and_show_download_success
+)
+from frontend.auth import require_auth, show_user_info
+from frontend.api.image import ImageAPI
+from frontend.api.common import BaseAPI
+from shared.config import settings, streamlit_settings
+import os
+import sys
 import time
 import logging
 import base64
 import streamlit as st
 
-from shared.config import settings, streamlit_settings
-from frontend.api.common import BaseAPI
-from frontend.api.image import ImageAPI
-from frontend.auth import require_auth, show_user_info
-from frontend.utils.download import (
-    handle_download_error, show_download_error,
-    trigger_direct_download, check_and_show_download_success
-)
-from frontend.components.ui import apply_all_css, create_sidebar_section
-from frontend.components.buttons import create_download_button, create_bulk_download_button
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 
 logger = logging.getLogger(__name__)
