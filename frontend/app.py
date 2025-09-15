@@ -2,6 +2,12 @@
 Streamlit Frontend Application
 """
 
+import os
+import sys
+import time
+import logging
+import base64
+import streamlit as st
 from frontend.components.buttons import create_download_button, create_bulk_download_button
 from frontend.components.ui import apply_all_css, create_sidebar_section
 from frontend.utils.download import (
@@ -12,18 +18,17 @@ from frontend.auth import require_auth, show_user_info
 from frontend.api.image import ImageAPI
 from frontend.api.common import BaseAPI
 from shared.config import settings, streamlit_settings
-import os
-import sys
-import time
-import logging
-import base64
-import streamlit as st
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
+logger.info(
+    f"🔍 Environment BACKEND_URL: {os.getenv('BACKEND_URL', 'NOT SET')}")
+logger.info(f"🔍 Environment API_PORT: {os.getenv('API_PORT', 'NOT SET')}")
+logger.info(f"⚙️  Settings BACKEND_URL: {settings.BACKEND_URL}")
 
 BACKEND_URL = settings.BACKEND_URL
 

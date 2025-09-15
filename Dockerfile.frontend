@@ -3,12 +3,16 @@
 
 FROM python:3.11-slim
 
+# Accept build arguments from GitHub Actions
+ARG BACKEND_URL
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    UV_CACHE_DIR=/app/.cache/uv
+    UV_CACHE_DIR=/app/.cache/uv \
+    BACKEND_URL=${BACKEND_URL}
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -33,6 +37,9 @@ COPY . .
 
 # Set Python path to include the project root and all subdirectories
 ENV PYTHONPATH=/app:/app/backend:/app/frontend:/app/shared:/app/scripts
+
+# Debug: Print environment variables during build (will show in build logs)
+RUN echo "🔍 Build-time BACKEND_URL: ${BACKEND_URL}"
 
 # Expose port
 EXPOSE 8501

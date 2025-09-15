@@ -17,8 +17,9 @@ class Settings:
     FRONTEND_HOST: str = os.getenv("FRONTEND_HOST", "0.0.0.0")
     FRONTEND_PORT: int = int(os.getenv("FRONTEND_PORT", "8501"))
 
-    # Backend URL for frontend
-    BACKEND_URL: str = os.getenv("BACKEND_URL", f"http://localhost:{API_PORT}")
+    # Backend URL for frontend - prioritize environment variable
+    BACKEND_URL: str = os.getenv(
+        "BACKEND_URL") or f"http://localhost:{int(os.getenv('API_PORT', '8000'))}"
 
     # Logging Configuration
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
