@@ -20,7 +20,7 @@ job "image-processing" {
     count = 1
 
     network {
-      port "api" {
+      port "image-processing-api" {
         static = 8000
         to = 8000
       }
@@ -31,7 +31,7 @@ job "image-processing" {
 
       config {
         image = "ghcr.io/csyyysc/image-processing-backend"
-        ports = ["api"]
+        ports = ["image-processing-api"]
         
         # Mount volumes for data persistence
         volumes = [
@@ -48,7 +48,7 @@ job "image-processing" {
 
       service {
         name     = "image-processing-backend"
-        port     = "api"
+        port     = "image-processing-api"
         provider = "nomad"
         tags     = ["backend", "api", "image-processing"]
 
@@ -70,7 +70,7 @@ job "image-processing" {
     count = 1
 
     network {
-      port "web" {
+      port "image-processing" {
         static = 8501
         to = 8501
       }
